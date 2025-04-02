@@ -17,7 +17,7 @@ class SensorData(Base):
     __tablename__ = "sensor_data"
     id = Column(Integer, primary_key=True, index=True)
     topic = Column(String, index=True)
-    payload = Column(String)
+    data = Column(String)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 # Create tables if they don't exist
