@@ -1,52 +1,42 @@
-import threading
-import paho.mqtt.client as mqtt
-from fastapi import FastAPI, HTTPException
+# main.py
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy.orm import Session
+from database import SessionLocal, SensorData
+from mqtt_handler import run_mqtt_in_background
+from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="FastAPI & MQTT Integration Example")
+app = FastAPI(title="IoT Simple Data API", version="1.0")
 
-# Create a global MQTT client instance
-mqtt_client = mqtt.Client()
+# Allow Cross-Origin Resource Sharing if needed
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Callback for when the client receives a CONNACK response from the server.
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print("Connected successfully to MQTT broker")
-        # Subscribe to a topic after connecting
-        client.subscribe("test/topic")
-    else:
-        print("Failed to connect, return code %d\n", rc)
+# Dependency to get a database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-# Callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
-    print(f"Received message on {msg.topic}: {msg.payload.decode()}")
-
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
-
-def mqtt_loop():
-    # Connect to an MQTT broker (e.g., a public broker or your own)
-    mqtt_client.connect("localhost", 1883, 60)
-    # Run the loop forever in this thread
-    mqtt_client.loop_forever()
-
-# FastAPI startup event: start the MQTT loop in a separate background thread.
+# Start the MQTT client when the FastAPI app starts
 @app.on_event("startup")
 def startup_event():
-    thread = threading.Thread(target=mqtt_loop)
-    thread.daemon = True
-    thread.start()
-    print("MQTT client loop started in a background thread.")
+    run_mqtt_in_background()
+    print("MQTT handler started.")
 
-# A basic HTTP endpoint to check service health.
 @app.get("/")
-async def read_root():
-    return {"message": "FastAPI & MQTT are running"}
+async def root():
+    return {"message": "IoT Data API is running"}
 
-# Endpoint to publish messages to an MQTT topic.
-@app.post("/publish")
-async def publish_message(topic: str, payload: str):
-    result = mqtt_client.publish(topic, payload)
-    # Check if the message was published successfully (result[0] == 0 means success)
-    if result.rc != 0:
-        raise HTTPException(status_code=500, detail="Failed to publish message")
-    return {"message": f"Message published to {topic}"}
+@app.get("/data")
+def read_sensor_data(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
+    data = db.query(SensorData).offset(skip).limit(limit).all()
+    if not data:
+        raise HTTPException(status_code=404, detail="No sensor data available")
+    return data

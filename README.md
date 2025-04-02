@@ -56,4 +56,9 @@ uvicorn main:app --reload
 ```
 
 
-## this project can start with Redis 
+than create file ENV.py
+```python
+
+host = "broker.rolork.com"
+
+```
