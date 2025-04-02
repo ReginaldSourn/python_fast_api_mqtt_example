@@ -59,6 +59,6 @@ uvicorn main:app --reload
 than create file ENV.py
 ```python
 
-host = "broker.rolork.com"
+host = "your-broker-address"
 
 ```
