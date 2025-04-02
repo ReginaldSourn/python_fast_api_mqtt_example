@@ -54,3 +54,6 @@ after that you can run the code with guvicorn
 ```
 uvicorn main:app --reload
 ```
+
+
+## this project can start with Redis 

@@ -10,7 +10,7 @@ services:
       - EMQX_DATABASE_TYPE=postgresql
       - EMQX_DATABASE_HOST=postgres
       - EMQX_DATABASE_PORT=5432
-      - EMQX_DATABASE_USERNAME=your_username
+      - EMQX_DATABASE_USERNAME="
       - EMQX_DATABASE_PASSWORD=your_password
       - EMQX_DATABASE_NAME=your_database
     ports:
