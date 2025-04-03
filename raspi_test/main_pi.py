@@ -1,8 +1,8 @@
 import time
 import paho.mqtt.client as mqtt
-
+import ENV
 # MQTT configuration
-MQTT_BROKER = "localhost"  # Replace with your MQTT broker address
+MQTT_BROKER = ENV.host  # Replace with your MQTT broker address
 MQTT_PORT = 1883
 MQTT_TOPIC_TEMPERATURE = "raspi/temperature"
 MQTT_TOPIC_CPU_TEMPERATURE = "raspi/cpu_temperature"
